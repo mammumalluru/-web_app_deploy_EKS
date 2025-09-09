@@ -1,17 +1,14 @@
 pipeline {
-
     agent any
 
     environment {
-        ECR_REPO_NAME = "web-app-deploy"
-        IMAGE_TAG = "v1-${BUILD_NUMBER}"
-        AWS_REGION = "us-east-1"
-        AWS_ACCOUNT_ID = "047719616549"
-        CLUSTER_NAME = "my-eks-cluster"
-        K8S_DEPLOYMENT = "deployment.yaml"
-        /// KUBE_CONFIG = "/var/lib/jenkins/.kube/config"
-        KUBECONFIG = "/root/.kube/config"
-
+        ECR_REPO_NAME   = "web-app-deploy"
+        IMAGE_TAG       = "v1-${BUILD_NUMBER}"
+        AWS_REGION      = "us-east-1"
+        AWS_ACCOUNT_ID  = "047719616549"
+        CLUSTER_NAME    = "my-eks-cluster"
+        K8S_DEPLOYMENT  = "deployment.yaml"
+        KUBECONFIG      = "${WORKSPACE}/.kube/config"
     }
 
     stages {
@@ -60,22 +57,23 @@ pipeline {
             }
         }
 
-        /// deploy to EKS
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    echo "Updating kubeconfig..."
+                    sh """
+                        mkdir -p ${WORKSPACE}/.kube
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG}
+                    """
 
-            stage('Deploy to EKS') {
-                steps {
-                    script {
-                        echo "Deploying to EKS..."
-                        sh """
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG}
-                            export KUBECONFIG=${KUBECONFIG}
-                            sed -i 's|image:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}|' ${K8S_DEPLOYMENT}
-                            kubectl apply -f ${K8S_DEPLOYMENT}
-                            kubectl rollout status deployment/web-app
-                        """
-                    }
+                    echo "Deploying to EKS..."
+                    sh """
+                        sed -i 's|image:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}|' ${K8S_DEPLOYMENT}
+                        kubectl apply -f ${K8S_DEPLOYMENT}
+                        kubectl rollout status deployment/web-app
+                    """
                 }
             }
-
+        }
     }
 }
