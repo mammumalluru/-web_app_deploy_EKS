@@ -8,7 +8,7 @@ pipeline {
         AWS_ACCOUNT_ID  = "047719616549"
         CLUSTER_NAME    = "my-eks-cluster"
         K8S_DEPLOYMENT  = "deployment.yaml"
-        KUBECONFIG      = "${WORKSPACE}/.kube/config"
+        KUBE_CONFIG = "/var/lib/jenkins/.kube/config"
     }
 
     stages {
@@ -59,12 +59,12 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                script {
-                    echo "Updating kubeconfig..."
-                    sh """
-                        mkdir -p ${WORKSPACE}/.kube
-                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG}
-                    """
+                withAWS(region: "$AWS_REGION", credentials: 'AWS-creds') {
+                    // echo "Updating kubeconfig..."
+                    // // sh """
+                    // //     mkdir -p ${WORKSPACE}/.kube
+                    // //     aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG}
+                    // // """
 
                     echo "Deploying to EKS..."
                     sh """
