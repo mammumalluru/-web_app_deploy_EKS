@@ -9,7 +9,8 @@ pipeline {
         AWS_ACCOUNT_ID = "047719616549"
         CLUSTER_NAME = "my-eks-cluster"
         K8S_DEPLOYMENT = "deployment.yaml"
-        KUBE_CONFIG = "/var/lib/jenkins/.kube/config"
+        /// KUBE_CONFIG = "/var/lib/jenkins/.kube/config"
+        KUBECONFIG = "/root/.kube/config"
 
     }
 
