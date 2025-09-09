@@ -7,6 +7,9 @@ pipeline {
         IMAGE_TAG = "v1-${BUILD_NUMBER}"
         AWS_REGION = "us-east-1"
         AWS_ACCOUNT_ID = "047719616549"
+        CLUSTER_NAME = "my-eks-cluster"
+        K8S_DEPLOYMENT = "deployment.yaml"
+
     }
 
     stages {
@@ -50,6 +53,26 @@ pipeline {
                     sh """
                         docker tag ${ECR_REPO_NAME}:${IMAGE_TAG} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}
                         docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+
+        /// deploy to EKS
+
+            stage('Deploy to EKS') {
+            steps {
+                script {
+                    echo "Updating kubeconfig..."
+                    sh """
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+                    """
+
+                    echo "Deploying to EKS..."
+                    sh """
+                        sed -i 's|image:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}|' ${K8S_DEPLOYMENT}
+                        kubectl apply -f ${K8S_DEPLOYMENT}
+                        kubectl rollout status deployment/web-app
                     """
                 }
             }
