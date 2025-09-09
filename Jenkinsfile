@@ -21,7 +21,7 @@ pipeline{
                     url: 'https://github.com/mammumalluru/-web_app_deploy_EKS.git', credentialsId: 'git-creds'
             }
         }
-##### Building Docker Image
+// Building Docker Image
 
         stage('Build Docker Image') {
             steps {
@@ -33,7 +33,7 @@ pipeline{
                 }
             }
         }
-#####  login to ECR
+// login to ECR
 
         stage(' login to ECR'){
 
@@ -49,7 +49,7 @@ pipeline{
             }
 
         }
-### push image to ECR
+// push image to ECR
 
         stage('Tag & Push Image to ECR') {
             steps {
